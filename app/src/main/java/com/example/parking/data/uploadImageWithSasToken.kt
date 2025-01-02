@@ -10,6 +10,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
+import java.io.FileNotFoundException
 
 suspend fun uploadImageWithSasToken(
     context: Context,
@@ -29,6 +30,12 @@ suspend fun uploadImageWithSasToken(
         }
         Log.d("BlobUpload", "Bilden sparad till temporär fil: ${tempFile.absolutePath} (Storlek: ${tempFile.length()} bytes)")
 
+        // Komprimera bilden
+        val compressedFile = compressImage(tempFile.absolutePath, context)
+        Log.d(
+            "BlobUpload",
+            "Komprimerad bild sparad: ${compressedFile.absolutePath} (Storlek: ${compressedFile.length()} bytes)"
+        )
         // Generera blob-namn (filnamn för bilden)
         val blobName = "${System.currentTimeMillis()}.jpg"
 
@@ -43,7 +50,7 @@ suspend fun uploadImageWithSasToken(
         val client = OkHttpClient()
         val request = Request.Builder()
             .url(uploadUrl)
-            .put(tempFile.asRequestBody("image/jpeg".toMediaType()))
+            .put(compressedFile.asRequestBody("image/jpeg".toMediaType()))
             .addHeader("x-ms-blob-type", "BlockBlob")
             .build()
 
