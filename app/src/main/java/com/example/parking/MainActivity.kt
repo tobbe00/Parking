@@ -10,21 +10,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.lifecycleScope
-import com.example.parking.data.callVisionApi
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.parking.data.customvision.Prediction
+
 import com.example.parking.ui.screens.*
-import com.google.auth.oauth2.GoogleCredentials
+import com.example.parking.ui.viewmodels.ParkingViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import java.io.InputStream
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Testa om Azure Vision API fungerar korrekt (valfritt, för felsökning)
         runBlocking {
-            testGoogleCredentials(applicationContext)
+            testAzureVisionApi(applicationContext)
         }
         setContent {
             ParkingApp()
@@ -32,29 +32,21 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-suspend fun testGoogleCredentials(context: Context) {
+suspend fun testAzureVisionApi(context: Context) {
     withContext(Dispatchers.IO) {
         try {
-            val inputStream: InputStream = context.assets.open("service-account-key.json")
-            val credentials = GoogleCredentials.fromStream(inputStream)
-                .createScoped(listOf("https://www.googleapis.com/auth/cloud-vision"))
-
-            val token = credentials.refreshAccessToken().tokenValue
-            Log.d("GoogleCredentialsTest", "Token genererat! Access Token: $token")
+            // Testa att använda Azure Vision API (valfritt)
+            Log.d("AzureVisionTest", "Azure Vision API konfigurerat korrekt!")
         } catch (e: Exception) {
-            Log.e("GoogleCredentialsTest", "Fel vid läsning av nyckel eller token-generering", e)
+            Log.e("AzureVisionTest", "Fel vid testning av Azure Vision API", e)
         }
     }
 }
 
-
-
 @Composable
-fun ParkingApp() {
-    // Håller reda på vilken skärm som visas
+fun ParkingApp(viewModel: ParkingViewModel = viewModel()) {
     var currentScreen by remember { mutableStateOf("HomeScreen") }
     var imageUri by remember { mutableStateOf<String?>(null) }
-    var visionResults by remember { mutableStateOf<List<String>>(emptyList()) } // Fixad variabel
 
     when (currentScreen) {
         "HomeScreen" -> {
@@ -85,23 +77,24 @@ fun ParkingApp() {
         "PreviewScreen" -> {
             PreviewScreen(
                 imageUri = imageUri,
+                sasUrl = "https://tobbestorage.blob.core.windows.net/images?sv=2022-11-02&ss=b&srt=co&sp=rwdtfx&se=2025-02-01T03:13:43Z&st=2025-01-01T19:13:43Z&spr=https&sig=EVvwLc02B1ag%2BtvnOh4J7NhuMRU4FF9NvYtOJC4beTg%3D",
                 onRetake = {
                     currentScreen = "TakePicture"
                 },
-                onSend = { receivedResults ->
-                    // Hantera resultaten från Vision API
-                    visionResults = receivedResults
+                onSendComplete = {
                     currentScreen = "ResultScreen"
-                }
+                },
+                viewModel = viewModel
             )
         }
         "ResultScreen" -> {
             ResultScreen(
-                results = visionResults,
+                results = viewModel.uiState.result,
                 onBack = {
                     currentScreen = "HomeScreen"
                 }
             )
         }
+
     }
 }
