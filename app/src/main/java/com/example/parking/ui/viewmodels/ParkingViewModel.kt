@@ -55,4 +55,9 @@ class ParkingViewModel : ViewModel() {
             }
         }
     }
+    // Method to clear results and reset the state
+    fun clearResults() {
+        Log.d("ParkingViewModel", "Clearing results and resetting UI state.")
+        uiState = ParkingUiState() // Resets the UI state to its initial value
+    }
 }
