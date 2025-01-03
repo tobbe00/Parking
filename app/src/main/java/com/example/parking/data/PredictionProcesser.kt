@@ -7,6 +7,9 @@ import com.example.parking.data.customvision.Prediction
 
 object PredictionProcessor {
 
+    private const val OCR_IMAGE_WIDTH = 1450.0
+    private const val OCR_IMAGE_HEIGHT = 3300.0
+
     fun processPredictions(
         predictions: List<Prediction>,
         ocrLines: List<OcrLine>,
@@ -22,14 +25,14 @@ object PredictionProcessor {
 
         Log.d("PredictionProcessor", "Bildens dimensioner: width=$imageWidth, height=$imageHeight")
 
-        // Skala OCR-koordinaterna till bildens dimensioner
+        // Skala OCR-koordinaterna
         val scaledOcrLines = ocrLines.map { ocrLine ->
             val boundingBox = ocrLine.boundingBox
             val scaledBoundingBox = boundingBox.mapIndexed { index, value ->
                 if (index % 2 == 0) {
-                    value / 1920.0f * imageWidth // Skala X-koordinater
+                    (value / OCR_IMAGE_WIDTH * imageWidth).toFloat() // Skala X-koordinater och konvertera till Float
                 } else {
-                    value / 1080.0f * imageHeight // Skala Y-koordinater
+                    (value / OCR_IMAGE_HEIGHT * imageHeight).toFloat() // Skala Y-koordinater och konvertera till Float
                 }
             }
             ocrLine.copy(boundingBox = scaledBoundingBox)
@@ -47,30 +50,25 @@ object PredictionProcessor {
         val matchedPredictions = highConfidencePredictions.map { prediction ->
             Log.d("PredictionProcessor", "Bearbetar prediction: ${prediction.tagName}, BoundingBox: ${prediction.boundingBox}")
 
-            val matchingTexts = scaledOcrLines.filter { ocrLine ->
-                val ocrBox = ocrLine.boundingBox
-                val predictionBox = prediction.boundingBox
+            val matchingText = scaledOcrLines.filter { ocrLine ->
+                Log.d("PredictionProcessor", "OCR Line: ${ocrLine.text}, BoundingBox: ${ocrLine.boundingBox}")
 
                 // Kontrollera om OCR och prediction-boxar överlappar
-                val isMatch = predictionBox.left <= ocrBox[2] &&
-                        predictionBox.left + predictionBox.width >= ocrBox[0] &&
-                        predictionBox.top <= ocrBox[3] &&
-                        predictionBox.top + predictionBox.height >= ocrBox[1]
+                val predictionBox = prediction.boundingBox
+                val ocrBox = ocrLine.boundingBox
+                val isMatch = predictionBox.left <= ocrBox[2] && predictionBox.left + predictionBox.width >= ocrBox[0] &&
+                        predictionBox.top <= ocrBox[3] && predictionBox.top + predictionBox.height >= ocrBox[1]
 
-                Log.d(
-                    "PredictionProcessor",
-                    "BoundingBox-kontroll: OCR Box: $ocrBox, Prediction Box: (${predictionBox.left}, ${predictionBox.top}, ${predictionBox.left + predictionBox.width}, ${predictionBox.top + predictionBox.height}), Is Match: $isMatch"
-                )
-
+                Log.d("PredictionProcessor", "BoundingBox-kontroll: OCR Box: ${ocrBox}, Prediction Box: (${predictionBox.left}, ${predictionBox.top}, ${predictionBox.left + predictionBox.width}, ${predictionBox.top + predictionBox.height}), Is Match: $isMatch")
                 isMatch
             }.map { it.text }
 
-            Log.d("PredictionProcessor", "Resultat för prediction: ${prediction.tagName}, Matching Texts: $matchingTexts")
+            Log.d("PredictionProcessor", "Resultat för prediction: ${prediction.tagName}, Matching Texts: $matchingText")
 
             val customDescription = getCustomDescription(prediction.tagName)
             PredictionResult(
                 tagName = prediction.tagName,
-                text = matchingTexts.joinToString(),
+                text = matchingText.joinToString(", "), // Slår ihop listan till en sträng
                 probability = prediction.probability,
                 description = customDescription
             )
