@@ -56,15 +56,18 @@ object AzureReadRepository {
             val ocrLines = mutableListOf<OcrLine>()
             readResult?.analyzeResult?.readResults?.forEach { page ->
                 page.lines?.forEach { line ->
+                    Log.d("AzureReadRepository", "OCR Line: ${line.text}, BoundingBox: ${line.boundingBox}")
                     val boundingBox = line.boundingBox.chunked(2).map { it[0] to it[1] }
                     ocrLines.add(
                         OcrLine(
                             text = line.text,
-                            boundingBox = boundingBox
+                            boundingBox = line.boundingBox // Skicka in originalformatet direkt
                         )
                     )
+
                 }
             }
+
             return@withContext ocrLines
 
         } catch (e: Exception) {
@@ -77,7 +80,3 @@ object AzureReadRepository {
 /**
  * Representerar en OCR-linje med text och bounding box.
  */
-data class OcrLine(
-    val text: String,
-    val boundingBox: List<Pair<Float, Float>>
-)

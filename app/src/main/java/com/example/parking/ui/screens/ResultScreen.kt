@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.parking.data.PredictionProcessor
+
 import com.example.parking.data.customvision.Prediction
 
 @Composable
@@ -19,6 +20,7 @@ fun ResultScreen(
     onBack: () -> Unit
 ) {
     val matchedPredictions = results["MatchedPredictions"] as? List<PredictionProcessor.PredictionResult>
+    val ocrLines = results["OcrLines"] as? List<String> // Ändra till List<String>
 
     Column(
         modifier = Modifier
@@ -41,6 +43,17 @@ fun ResultScreen(
                 fontSize = 16.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("OCR-text:", fontSize = 20.sp)
+        ocrLines?.forEach { line ->
+            Text(
+                text = line,
+                fontSize = 16.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
         }
 
         Spacer(modifier = Modifier.height(32.dp))

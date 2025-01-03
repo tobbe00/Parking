@@ -32,23 +32,36 @@ class ParkingViewModel : ViewModel() {
                 val blobUrl = uploadImageWithSasToken(context, imageUri, sasUrl)
 
                 Log.d("ParkingViewModel", "Hämtar OCR-data...")
-                val ocrLines = AzureReadRepository.getTextFromImageUrl(blobUrl) // OCR med bounding boxar
+                val ocrLines = AzureReadRepository.getTextFromImageUrl(blobUrl)
 
                 Log.d("ParkingViewModel", "Analyserar bild med Custom Vision...")
                 val customVisionResult = ParkingVisionRepository.detectFromImageUrl(blobUrl)
                 val predictions = customVisionResult?.predictions ?: emptyList()
 
+                // Hämta bildstorlek (dummyvärden, byt ut vid behov)
+                val imageWidth = 1920 // Exempel på bredd
+                val imageHeight = 1080 // Exempel på höjd
+
                 Log.d("ParkingViewModel", "Bearbetar predictions och matchar med OCR...")
-                val processedResults = PredictionProcessor.processPredictions(predictions, ocrLines)
+                val processedResults = PredictionProcessor.processPredictions(
+                    predictions = predictions,
+                    ocrLines = ocrLines,
+                    imageWidth = imageWidth,
+                    imageHeight = imageHeight
+                )
 
                 Log.d("ParkingViewModel", "Processed Results: $processedResults")
 
-                // Uppdatera UI-state
+                val matchedPredictions = processedResults["MatchedPredictions"] as? List<PredictionProcessor.PredictionResult>
+                val ocrOnlyLines = ocrLines.map { it.text }
+
                 uiState = uiState.copy(
-                    result = processedResults,
+                    result = mapOf(
+                        "MatchedPredictions" to matchedPredictions.orEmpty(),
+                        "OcrLines" to ocrOnlyLines
+                    ),
                     errorMessage = null
                 )
-
             } catch (e: Exception) {
                 Log.e("ParkingViewModel", "Fel vid bildanalys: ${e.message}", e)
                 uiState = uiState.copy(errorMessage = e.message)
