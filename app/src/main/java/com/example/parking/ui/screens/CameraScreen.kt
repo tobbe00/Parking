@@ -67,13 +67,15 @@ fun CameraScreen(onImageCaptured: (Uri) -> Unit) {
                 imageCapture.takePicture(outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                         val savedUri = Uri.fromFile(photoFile)
-                        onImageCaptured(savedUri)
+                        Log.d("CameraScreen", "Photo captured: $savedUri")
+                        onImageCaptured(savedUri) // Pass the latest image URI.
                     }
 
                     override fun onError(exception: ImageCaptureException) {
                         Log.e("CameraScreen", "Photo capture failed: ${exception.message}", exception)
                     }
                 })
+
             },
             modifier = Modifier
                 .align(Alignment.BottomCenter)

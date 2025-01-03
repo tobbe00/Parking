@@ -19,10 +19,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
+import android.content.pm.ActivityInfo
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Testa om Azure Vision API fungerar korrekt (valfritt, för felsökning)
+
+        // Lock orientation to portrait
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        // Test if Azure Vision API works correctly (optional, for debugging)
         runBlocking {
             testAzureVisionApi(applicationContext)
         }
