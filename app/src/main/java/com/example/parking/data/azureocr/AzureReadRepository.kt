@@ -12,31 +12,26 @@ object AzureReadRepository {
 
     private val service = AzureReadServiceFactory.create()
 
-    /**
-     * Anropar Read API med en bild-URL, pollar Operation-Location tills "succeeded" eller "failed".
-     * Returnerar en lista med OCR-linjer (text + bounding box).
-     */
-    suspend fun getTextFromImageUrl(imageUrl: String): List<OcrLine> = withContext(Dispatchers.IO) {
+    suspend fun getOcrLines(imageUrl: String): Pair<List<OcrLine>, Pair<Int, Int>> = withContext(Dispatchers.IO) {
         try {
-            // 1) Skicka in bilden (URL) till "read/analyze"
+            // Skicka in bilden (URL) till "read/analyze"
             val postResp: Response<Void> = service.postImageUrl(mapOf("url" to imageUrl)).execute()
             if (!postResp.isSuccessful) {
-                val errorBody = postResp.errorBody()?.string()
-                Log.e("AzureReadRepository", "Fel i POST: ${postResp.code()} - $errorBody")
-                return@withContext emptyList()
+                Log.e("AzureReadRepository", "POST-fel: ${postResp.code()} - ${postResp.errorBody()?.string()}")
+                return@withContext Pair(emptyList(), Pair(0, 0))
             }
 
             // Få ut Operation-Location från header
             val operationLocation = postResp.headers()["Operation-Location"]
             if (operationLocation.isNullOrBlank()) {
-                Log.e("AzureReadRepository", "Saknar Operation-Location i POST-svaret")
-                return@withContext emptyList()
+                Log.e("AzureReadRepository", "Saknar Operation-Location")
+                return@withContext Pair(emptyList(), Pair(0, 0))
             }
 
-            // 2) Polla GET tills status=succeeded
+            // Polla GET tills status=succeeded
             var readResult: ReadOperationResult? = null
             for (i in 1..10) {
-                delay(1000L) // vänta 1 sekund
+                delay(1000L)
                 val getResp = service.getReadResult(operationLocation).execute()
                 if (getResp.isSuccessful) {
                     val body = getResp.body()
@@ -44,7 +39,7 @@ object AzureReadRepository {
                         readResult = body
                         break
                     } else if (body?.status == "failed") {
-                        Log.e("AzureReadRepository", "OCR failed enligt status=failed")
+                        Log.e("AzureReadRepository", "OCR misslyckades med status=failed")
                         break
                     }
                 } else {
@@ -52,31 +47,30 @@ object AzureReadRepository {
                 }
             }
 
-            // 3) Extrahera text och bounding boxar
+            // Extrahera OCR-data
             val ocrLines = mutableListOf<OcrLine>()
-            readResult?.analyzeResult?.readResults?.forEach { page ->
+            var width = 0
+            var height = 0
+
+            readResult?.analyzeResult?.readResults?.firstOrNull()?.let { page ->
+                width = page.width
+                height = page.height
                 page.lines?.forEach { line ->
-                    Log.d("AzureReadRepository", "OCR Line: ${line.text}, BoundingBox: ${line.boundingBox}")
-                    val boundingBox = line.boundingBox.chunked(2).map { it[0] to it[1] }
+                    // Här sparar vi pixelBox som "pixelBox"
                     ocrLines.add(
                         OcrLine(
                             text = line.text,
-                            boundingBox = line.boundingBox // Skicka in originalformatet direkt
+                            pixelBox = line.boundingBox // i PIXLAR från Azure OCR
                         )
                     )
-
                 }
             }
 
-            return@withContext ocrLines
+            return@withContext Pair(ocrLines, Pair(width, height))
 
         } catch (e: Exception) {
-            Log.e("AzureReadRepository", "getTextFromImageUrl Exception: ${e.message}", e)
-            return@withContext emptyList()
+            Log.e("AzureReadRepository", "Undantag i getOcrLines: ${e.message}", e)
+            return@withContext Pair(emptyList(), Pair(0, 0))
         }
     }
 }
-
-/**
- * Representerar en OCR-linje med text och bounding box.
- */

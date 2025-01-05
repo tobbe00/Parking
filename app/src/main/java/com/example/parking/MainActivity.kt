@@ -97,6 +97,8 @@ fun ParkingApp(viewModel: ParkingViewModel = viewModel()) {
             ResultScreen(
                 results = viewModel.uiState.result,
                 onBack = {
+                    imageUri = null // Clear the previous image URI
+                    viewModel.clearResults() // Clear ViewModel state
                     currentScreen = "HomeScreen"
                 }
             )

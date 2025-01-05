@@ -86,5 +86,13 @@ fun PreviewScreen(
             Log.d("PreviewScreen", "Resultat hittat: ${uiState.result}")
             onSendComplete(uiState.result)
         }
+        if (uiState.isLoading) {
+            Text(
+                text = "Analyserar bilden...",
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
+            )
+        }
     }
 }

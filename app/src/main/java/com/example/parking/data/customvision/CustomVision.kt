@@ -30,7 +30,7 @@ data class BoundingBox(
 
 interface ParkingVisionService {
 
-    @POST("customvision/v3.0/Prediction/aaaf6b69-b0fb-451c-bfc1-fdf41b3672ae/detect/iterations/Iteration3/url")
+    @POST("customvision/v3.0/Prediction/aaaf6b69-b0fb-451c-bfc1-fdf41b3672ae/detect/iterations/Iteration5/url")
     @Headers(
         "Content-Type: application/json",
         "Prediction-Key: peaJn2umHlW71bsOzZ0eTdddP5bjsXai0TsjXEZPnfm95tIBTWMFJQQJ99ALACYeBjFXJ3w3AAAIACOG8cFQ"

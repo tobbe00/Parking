@@ -1,107 +1,110 @@
 package com.example.parking.data
 
 import android.util.Log
-import com.example.parking.data.models.OcrLine
 import com.example.parking.data.customvision.BoundingBox
 import com.example.parking.data.customvision.Prediction
+import com.example.parking.data.models.OcrLine
+import com.example.parking.data.models.TiderLineInfo
 
 object PredictionProcessor {
 
-    private const val OCR_IMAGE_WIDTH = 1450.0
-    private const val OCR_IMAGE_HEIGHT = 3300.0
-
+    /**
+     * Returnerar en karta: "MatchedPredictions" -> List<PredictionResult>.
+     *
+     * Varje PredictionResult innehåller:
+     * - tagName
+     * - probability
+     * - description (från getCustomDescription i TagNameMapper)
+     * - boundingBox
+     * - matchedOcrLines
+     * - tiderLines (alla OCR-rader som är tidsintervall)
+     * - text (alla OCR-rader som inte är tid, hopslagna till en sträng)
+     */
     fun processPredictions(
         predictions: List<Prediction>,
         ocrLines: List<OcrLine>,
         imageWidth: Int,
         imageHeight: Int
     ): Map<String, Any> {
-        Log.d("PredictionProcessor", "Startar bearbetning av predictions...")
-
         if (imageWidth <= 0 || imageHeight <= 0) {
-            Log.e("PredictionProcessor", "Ogiltiga bilddimensioner: width=$imageWidth, height=$imageHeight")
             throw IllegalArgumentException("Image width and height must be greater than 0")
         }
 
-        Log.d("PredictionProcessor", "Bildens dimensioner: width=$imageWidth, height=$imageHeight")
+        Log.d("PredictionProcessor", "Alla detekterade tags:")
+        predictions.forEach {
+            Log.d("PredictionProcessor", "Tag: ${it.tagName}, Probability: ${it.probability}")
+        }
 
-        // Skala OCR-koordinaterna
-        val scaledOcrLines = ocrLines.map { ocrLine ->
-            val boundingBox = ocrLine.boundingBox
-            val scaledBoundingBox = boundingBox.mapIndexed { index, value ->
-                if (index % 2 == 0) {
-                    (value / OCR_IMAGE_WIDTH * imageWidth).toFloat() // Skala X-koordinater och konvertera till Float
-                } else {
-                    (value / OCR_IMAGE_HEIGHT * imageHeight).toFloat() // Skala Y-koordinater och konvertera till Float
-                }
+        // 1) Normalisera OCR-linjerna
+        val normalizedOcrLines = ocrLines.map { line ->
+            val normBox = line.pixelBox.mapIndexed { i, value ->
+                if (i % 2 == 0) value / imageWidth else value / imageHeight
             }
-            ocrLine.copy(boundingBox = scaledBoundingBox)
+            line.copy(normalizedBox = normBox)
         }
 
-        scaledOcrLines.forEach { scaledOcrLine ->
-            Log.d("PredictionProcessor", "Scaled OCR Line: ${scaledOcrLine.text}, BoundingBox: ${scaledOcrLine.boundingBox}")
-        }
+        // 2) Filtrera predictions med sannolikhet >= 0.8 (justera tröskel själv)
+        val highConfidencePredictions = predictions.filter { it.probability >= 0.8 }
 
-        // Filtrera prediktioner med sannolikhet ≥ 0.95
-        val highConfidencePredictions = predictions.filter { it.probability >= 0.95 }
-        Log.d("PredictionProcessor", "Predictions ≥ 95%: $highConfidencePredictions")
+        // 3) Håll endast den högst sannolika predictionen per tagg
+        val uniquePredictions = highConfidencePredictions
+            .groupBy { it.tagName }
+            .mapValues { (_, predictions) ->
+                predictions.maxByOrNull { it.probability }!!
+            }
+            .values
 
-        // Matcha prediction med OCR-text
-        val matchedPredictions = highConfidencePredictions.map { prediction ->
-            Log.d("PredictionProcessor", "Bearbetar prediction: ${prediction.tagName}, BoundingBox: ${prediction.boundingBox}")
+        // 4) Matcha varje unik prediction med OCR-linjer
+        val matchedPredictions = uniquePredictions.map { prediction ->
+            // Hitta OCR-linjer vars bounding box överlappar
+            val matchedLines = normalizedOcrLines.filter { ocrLine ->
+                val ocrBox = ocrLine.normalizedBox
+                val cvBox = prediction.boundingBox
+                cvBox.left <= ocrBox[2] &&
+                        (cvBox.left + cvBox.width) >= ocrBox[0] &&
+                        cvBox.top <= ocrBox[3] &&
+                        (cvBox.top + cvBox.height) >= ocrBox[1]
+            }
 
-            val matchingText = scaledOcrLines.filter { ocrLine ->
-                Log.d("PredictionProcessor", "OCR Line: ${ocrLine.text}, BoundingBox: ${ocrLine.boundingBox}")
+            // Dela upp i "tidsintervall" vs. "övriga rader"
+            val timeLines = matchedLines.filter { isTimeRange(it.text) }
+            val otherLines = matchedLines.filter { !isTimeRange(it.text) }
 
-                // Kontrollera om OCR och prediction-boxar överlappar
-                val predictionBox = prediction.boundingBox
-                val ocrBox = ocrLine.boundingBox
-                val isMatch = predictionBox.left <= ocrBox[2] && predictionBox.left + predictionBox.width >= ocrBox[0] &&
-                        predictionBox.top <= ocrBox[3] && predictionBox.top + predictionBox.height >= ocrBox[1]
+            // Bygg TiderLineInfo av tidsrader
+            val tiderLineInfos = timeLines.map { line ->
+                TiderLineInfo(
+                    text = line.text,
+                    isRed = false
+                )
+            }
 
-                Log.d("PredictionProcessor", "BoundingBox-kontroll: OCR Box: ${ocrBox}, Prediction Box: (${predictionBox.left}, ${predictionBox.top}, ${predictionBox.left + predictionBox.width}, ${predictionBox.top + predictionBox.height}), Is Match: $isMatch")
-                isMatch
-            }.map { it.text }
+            // Övriga rader slår vi ihop till en sträng
+            val matchingText = otherLines.joinToString(", ") { it.text }
 
-            Log.d("PredictionProcessor", "Resultat för prediction: ${prediction.tagName}, Matching Texts: $matchingText")
-
-            val customDescription = getCustomDescription(prediction.tagName)
+            // Bygg ut PredictionResult
             PredictionResult(
                 tagName = prediction.tagName,
-                text = matchingText.joinToString(", "), // Slår ihop listan till en sträng
+                text = matchingText,
                 probability = prediction.probability,
-                description = customDescription
+                description = getCustomDescription(prediction.tagName),
+                boundingBox = prediction.boundingBox,
+                matchedOcrLines = matchedLines,
+                tiderLines = tiderLineInfos
             )
         }
 
-        Log.d("PredictionProcessor", "Matched Predictions: $matchedPredictions")
         return mapOf("MatchedPredictions" to matchedPredictions)
     }
 
-    private fun getCustomDescription(tagName: String): String {
-        val description = when (tagName) {
-            "FörbudJämnUdda" -> "Förbjudet att parkera på ena sidan beroende på om datumet är jämnt eller udda"
-            "FörbudJämn" -> "Förbjudet att parkera på dag med jämnt datum"
-            "FörbudUdda" -> "Förbjudet att parkera på dag med udda datum"
-            "FörbudStop" -> "Förbjudet att stanna"
-            "FörbudParkera" -> "Förbjudet att parkera"
-            "Huvudled" -> "Förbjudet att parkera på en väg som är huvudled"
-            "HögerVänsterPil" -> "Parkering till båda sidor om skylten"
-            "pilVänster" -> "Parkering till vänster om skylten"
-            "pilHöger" -> "Parkering till höger om skylten"
-            "Laddplats" -> "Endast elbilar får parkera"
-            "P-skiva" -> "Måste använda P-skiva"
-            "RakParkering" -> "Parkera vinkelrätt"
-            else -> "Okänd skylt"
-        }
-        Log.d("PredictionProcessor", "Custom Description för $tagName: $description")
-        return description
-    }
 
+    // Data class för “slutresultatet”
     data class PredictionResult(
         val tagName: String,
         val text: String,
         val probability: Float,
-        val description: String
+        val description: String,
+        val boundingBox: BoundingBox,
+        val matchedOcrLines: List<OcrLine>,
+        val tiderLines: List<TiderLineInfo> = emptyList()
     )
 }
