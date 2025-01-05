@@ -48,7 +48,19 @@ fun ResultScreen(
         "Pil höger",
         "RakParkering"
     )
-    val mainListPredictions = matchedPredictions.filter { it.tagName in mainListTagNames }
+    val customOrder = listOf(
+        "P-symbol",
+        "Tider",
+        "P-skiva",
+        "RakParkering",
+        "FörbudParkera",
+        "Pil höger"
+    )
+
+    val mainListPredictions = matchedPredictions
+        .filter { it.tagName in mainListTagNames }
+        .sortedBy { customOrder.indexOf(it.tagName).takeIf { index -> index != -1 } ?: Int.MAX_VALUE }
+
 
     Column(
         modifier = Modifier

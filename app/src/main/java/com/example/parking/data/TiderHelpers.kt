@@ -101,7 +101,8 @@ fun buildTimeExplanation(lineInfo: TiderLineInfo): String {
     val cleanLine = rawText.removeSurrounding("(", ")").trim()
 
     // 3) Identifiera dagprefix
-    val dayRegex = Regex("^(Mån|Månd|Tis|Tisd|Ons|Onsd|Tors|Torsd|Fre|Fred|Lör|Lörd|Sön|Sönd)", RegexOption.IGNORE_CASE)
+    val dayRegex = Regex("^(Mån|Månd|Tis|Tisd|Ons|Onsd|Tors|Torsd|Fre|Fred|Lör|Lörd|Sön|Sönd)\\b", RegexOption.IGNORE_CASE)
+
     val matchResult = dayRegex.find(cleanLine)
     val foundDay = matchResult?.value.orEmpty()    // t.ex. "Tisd"
 
