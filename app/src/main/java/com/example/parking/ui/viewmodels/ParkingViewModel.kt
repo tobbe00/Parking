@@ -8,11 +8,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.parking.data.azureocr.AzureReadRepository
-import com.example.parking.data.customvision.ParkingVisionRepository
-import com.example.parking.data.ColorDetectionUtils
-import com.example.parking.data.PredictionProcessor
-import com.example.parking.data.uploadImageWithSasToken
+import com.example.parking.data.repositories.azureocr.AzureReadRepository
+import com.example.parking.data.repositories.customvision.ParkingVisionRepository
+import com.example.parking.data.utils.ColorDetectionUtils
+import com.example.parking.data.repositories.customvision.PredictionProcessor
+import com.example.parking.data.repositories.blobstorage.uploadImageWithSasToken
 import com.example.parking.data.models.ParkingUiState
 import com.example.parking.data.models.TiderLineInfo
 import kotlinx.coroutines.launch

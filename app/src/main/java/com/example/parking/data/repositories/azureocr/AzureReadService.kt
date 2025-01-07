@@ -1,4 +1,4 @@
-package com.example.parking.data.azureocr
+package com.example.parking.data.repositories.azureocr
 
 import com.example.parking.data.models.ReadOperationResult
 import retrofit2.Call

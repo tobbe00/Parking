@@ -1,8 +1,9 @@
-package com.example.parking.data
+package com.example.parking.data.repositories.blobstorage
 
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.example.parking.data.utils.compressImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -10,7 +11,6 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
-import java.io.FileNotFoundException
 
 suspend fun uploadImageWithSasToken(
     context: Context,

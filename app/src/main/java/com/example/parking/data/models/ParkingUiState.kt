@@ -1,6 +1,6 @@
 package com.example.parking.data.models
 
-import com.example.parking.data.customvision.Prediction
+import com.example.parking.data.repositories.customvision.Prediction
 
 data class ParkingUiState(
     val result: Map<String, Any> = emptyMap(),

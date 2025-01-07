@@ -1,4 +1,4 @@
-package com.example.parking.data.customvision
+package com.example.parking.data.repositories.customvision
 
 import retrofit2.Call
 import retrofit2.http.Body

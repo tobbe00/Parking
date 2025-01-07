@@ -1,5 +1,5 @@
 // ParkingVisionServiceFactory.kt
-package com.example.parking.data.customvision
+package com.example.parking.data.repositories.customvision
 
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit

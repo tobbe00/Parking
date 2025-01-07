@@ -1,6 +1,5 @@
 package com.example.parking.ui.screens
 
-import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -9,19 +8,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 
-import com.example.parking.data.azureocr.AzureReadRepository
-import com.example.parking.data.customvision.ParkingVisionRepository
-import com.example.parking.data.uploadImageWithSasToken
 import com.example.parking.ui.viewmodels.ParkingViewModel
-
-import kotlinx.coroutines.launch
 
 @Composable
 fun PreviewScreen(

@@ -1,4 +1,4 @@
-package com.example.parking.data.azureocr
+package com.example.parking.data.repositories.azureocr
 
 import android.util.Log
 import com.example.parking.data.models.*

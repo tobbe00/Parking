@@ -11,7 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.parking.data.customvision.Prediction
+import com.example.parking.data.repositories.customvision.Prediction
 
 import com.example.parking.ui.screens.*
 import com.example.parking.ui.viewmodels.ParkingViewModel

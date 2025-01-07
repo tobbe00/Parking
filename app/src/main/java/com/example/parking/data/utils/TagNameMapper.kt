@@ -1,10 +1,10 @@
-package com.example.parking.data
+package com.example.parking.data.utils
 
 import android.util.Log
 
 fun getCustomDescription(tagName: String): String {
     val description = when (tagName) {
-        "FörbudJämnUdda" -> "Förbjudet att parkera på ena sidan beroende på om datumet är jämnt eller udda"
+        "FörbudJämnUdda" -> "Parkering är förbjuden på sidan med udda husnummer på udda datum och på sidan med jämna husnummer på jämna datum."
         "FörbudJämn" -> "Förbjudet att parkera på dag med jämnt datum"
         "FörbudUdda" -> "Förbjudet att parkera på dag med udda datum"
         "FörbudStop" -> "Förbjudet att stanna"

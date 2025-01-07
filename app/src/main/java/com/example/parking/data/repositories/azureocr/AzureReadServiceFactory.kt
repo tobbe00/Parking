@@ -1,4 +1,4 @@
-package com.example.parking.data.azureocr
+package com.example.parking.data.repositories.azureocr
 
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit

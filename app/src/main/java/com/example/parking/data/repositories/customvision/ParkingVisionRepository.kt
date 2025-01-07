@@ -1,5 +1,5 @@
 // ParkingVisionRepository.kt
-package com.example.parking.data.customvision
+package com.example.parking.data.repositories.customvision
 
 import android.util.Log
 import kotlinx.coroutines.Dispatchers

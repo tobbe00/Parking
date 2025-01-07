@@ -1,10 +1,10 @@
-package com.example.parking.data
+package com.example.parking.data.repositories.customvision
 
 import android.util.Log
-import com.example.parking.data.customvision.BoundingBox
-import com.example.parking.data.customvision.Prediction
 import com.example.parking.data.models.OcrLine
 import com.example.parking.data.models.TiderLineInfo
+import com.example.parking.data.utils.getCustomDescription
+import com.example.parking.data.utils.isTimeRange
 
 object PredictionProcessor {
 

@@ -1,4 +1,4 @@
-package com.example.parking.data
+package com.example.parking.data.utils
 
 import com.example.parking.data.models.TiderLineInfo
 
@@ -101,7 +101,7 @@ fun buildTimeExplanation(lineInfo: TiderLineInfo): String {
     val cleanLine = rawText.removeSurrounding("(", ")").trim()
 
     // 3) Identifiera dagprefix
-    val dayRegex = Regex("^(Mån|Månd|Tis|Tisd|Ons|Onsd|Tors|Torsd|Fre|Fred|Lör|Lörd|Sön|Sönd)\\b", RegexOption.IGNORE_CASE)
+    val dayRegex = Regex("^(Mån|Månd|Måndag|Tis|Tisd|Tisdag|Ons|Onsd|Onsdag|Tors|Torsd|Torsdag|Fre|Fred|Fredag|Lör|Lörd|Lördag|Sön|Sönd|Söndag)\\b", RegexOption.IGNORE_CASE)
 
     val matchResult = dayRegex.find(cleanLine)
     val foundDay = matchResult?.value.orEmpty()    // t.ex. "Tisd"
@@ -122,14 +122,14 @@ fun buildTimeExplanation(lineInfo: TiderLineInfo): String {
 
     // 6) Översätt dagprefix (”Tisd” → ”Tisdag” osv.)
     val dayString = when (foundDay.lowercase()) {
-        "mån", "månd" -> "Måndag"
-        "tis", "tisd" -> "Tisdag"
-        "ons", "onsd" -> "Onsdag"
-        "tors", "torsd" -> "Torsdag"
-        "fre", "fred" -> "Fredag"
-        "lör", "lörd" -> "Lördag"
-        "sön", "sönd" -> "Söndag"
-        else -> foundDay  // fallback om du t.ex. får "Må" bara
+        "mån", "månd", "måndag" -> "Måndag"
+        "tis", "tisd", "tisdag" -> "Tisdag"
+        "ons", "onsd", "onsdag" -> "Onsdag"
+        "tors", "torsd", "torsdag" -> "Torsdag"
+        "fre", "fred", "fredag" -> "Fredag"
+        "lör", "lörd", "lördag" -> "Lördag"
+        "sön", "sönd", "söndag" -> "Söndag"
+        else -> foundDay // fallback
     }
 
     // 7) Returnera slutsträng beroende på isRed/isParenthesized/dagprefix

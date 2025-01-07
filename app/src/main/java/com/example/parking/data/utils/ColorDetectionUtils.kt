@@ -1,4 +1,4 @@
-package com.example.parking.data
+package com.example.parking.data.utils
 
 import android.content.Context
 import android.graphics.Bitmap

@@ -11,16 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.parking.data.PredictionProcessor
-import com.example.parking.data.buildDateExplanation
-import com.example.parking.data.buildTimeExplanation
-import com.example.parking.data.combineDayPrefixWithNextTimeRange
-import com.example.parking.data.extractHoursFromPText
-import com.example.parking.data.getCustomDescription
-import com.example.parking.data.mapTagNameToDisplayName
-import com.example.parking.data.isDateRange
-import com.example.parking.data.isTimeRange
-import com.example.parking.data.models.TiderLineInfo
+import com.example.parking.data.repositories.customvision.PredictionProcessor
+import com.example.parking.data.utils.buildDateExplanation
+import com.example.parking.data.utils.buildTimeExplanation
+import com.example.parking.data.utils.combineDayPrefixWithNextTimeRange
+import com.example.parking.data.utils.extractHoursFromPText
+import com.example.parking.data.utils.mapTagNameToDisplayName
+import com.example.parking.data.utils.isDateRange
 
 @Composable
 fun ResultScreen(
@@ -54,13 +51,15 @@ fun ResultScreen(
         "P-skiva",
         "RakParkering",
         "FörbudParkera",
+        "FörbudJämnUdda",
+        "FörbudJämn",
+        "FörbudUdda",
         "Pil höger"
     )
 
     val mainListPredictions = matchedPredictions
         .filter { it.tagName in mainListTagNames }
         .sortedBy { customOrder.indexOf(it.tagName).takeIf { index -> index != -1 } ?: Int.MAX_VALUE }
-
 
     Column(
         modifier = Modifier
@@ -81,12 +80,34 @@ fun ResultScreen(
             ) {
                 Column(Modifier.padding(8.dp)) {
                     when (prediction.tagName) {
-                        "Tider",
-                        "FörbudStop",
-                        "FörbudParkera",
                         "FörbudJämnUdda",
                         "FörbudJämn",
                         "FörbudUdda" -> {
+                            // Visa rubrik
+                            Text(
+                                text = mapTagNameToDisplayName(prediction.tagName),
+                                fontSize = 18.sp
+                            )
+                            // Lägg till custom description
+                            Text(
+                                text = prediction.description,
+                                fontSize = 16.sp
+                            )
+                            // Hantera tider om de finns
+                            if (prediction.tiderLines.isNotEmpty()) {
+                                val combinedTiderLines = combineDayPrefixWithNextTimeRange(prediction.tiderLines)
+                                combinedTiderLines.forEach { lineInfo ->
+                                    if (isDateRange(lineInfo.text)) {
+                                        Text("Gäller ${buildDateExplanation(lineInfo)}", fontSize = 16.sp)
+                                    } else {
+                                        Text(buildTimeExplanation(lineInfo), fontSize = 16.sp)
+                                    }
+                                }
+                            }
+                        }
+                        "Tider",
+                        "FörbudStop",
+                        "FörbudParkera" -> {
                             // Visa rubrik och text/tider för Tider och Förbud
                             Text(
                                 text = mapTagNameToDisplayName(prediction.tagName),
@@ -95,10 +116,21 @@ fun ResultScreen(
                             if (prediction.tiderLines.isNotEmpty()) {
                                 val combinedTiderLines = combineDayPrefixWithNextTimeRange(prediction.tiderLines)
                                 combinedTiderLines.forEach { lineInfo ->
-                                    if (isDateRange(lineInfo.text)) {
-                                        Text("Gäller ${buildDateExplanation(lineInfo)}", fontSize = 16.sp)
+                                    val modifiedText = if (lineInfo.text.contains("Avgift", ignoreCase = true)) {
+                                        "Du måste betala"
                                     } else {
-                                        Text(buildTimeExplanation(lineInfo), fontSize = 16.sp)
+                                        lineInfo.text
+                                    }
+
+                                    if (isDateRange(modifiedText)) {
+                                        Text("Gäller ${buildDateExplanation(lineInfo.copy(text = modifiedText))}", fontSize = 16.sp)
+                                    } else {
+                                        val hoursText = extractHoursFromPText(modifiedText)
+                                        if (hoursText.isNotEmpty()) {
+                                            Text("Du får stå i $hoursText", fontSize = 16.sp)
+                                        } else {
+                                            Text(buildTimeExplanation(lineInfo.copy(text = modifiedText)), fontSize = 16.sp)
+                                        }
                                     }
                                 }
                             } else {
