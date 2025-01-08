@@ -34,13 +34,13 @@ class ParkingViewModel : ViewModel() {
                 Log.d("ParkingViewModel", "Laddar upp bilden...")
                 val blobUrl = uploadImageWithSasToken(context, imageUri, sasUrl)
 
-                // 1) Ladda bilden lokalt för färgdetektering
+
                 val originalBitmap = ColorDetectionUtils.loadBitmapFromUri(context, imageUri)
                 if (originalBitmap == null) {
                     Log.e("ParkingViewModel", "Kunde inte läsa in originalbilden lokalt.")
                 }
 
-                // 2) Hämta OCR-data
+
                 Log.d("ParkingViewModel", "Hämtar OCR-data...")
                 val (ocrLines, dimensions) = AzureReadRepository.getOcrLines(blobUrl)
                 val (ocrWidth, ocrHeight) = dimensions
@@ -51,12 +51,11 @@ class ParkingViewModel : ViewModel() {
                     return@launch
                 }
 
-                // 3) Hämta predictions från Custom Vision
                 Log.d("ParkingViewModel", "Analyserar bild med Custom Vision...")
                 val customVisionResult = ParkingVisionRepository.detectFromImageUrl(blobUrl)
                 val predictions = customVisionResult?.predictions ?: emptyList()
 
-                // 4) Matcha predictions med OCR-linjer
+
                 Log.d("ParkingViewModel", "Bearbetar predictions och matchar med OCR...")
                 val processedResults = PredictionProcessor.processPredictions(
                     predictions,
@@ -67,7 +66,7 @@ class ParkingViewModel : ViewModel() {
                 val matchedPredictions = processedResults["MatchedPredictions"]
                         as? List<PredictionProcessor.PredictionResult> ?: emptyList()
 
-                // Kolla röd text för "Tider"
+
                 val updatedPredictions = matchedPredictions.map { pr ->
                     if (originalBitmap != null) {
                         val lineInfos = pr.matchedOcrLines.map { ocrLine ->
@@ -91,7 +90,7 @@ class ParkingViewModel : ViewModel() {
             } catch (e: Exception) {
                 uiState = uiState.copy(
                     errorMessage = e.message,
-                    isLoading = false  // Avsluta loading även vid fel
+                    isLoading = false
                 )
             }
         }
@@ -103,7 +102,7 @@ class ParkingViewModel : ViewModel() {
     }
 }
 
-// Vi kan göra en extension på PredictionResult för att lägga in "tiderLines"
+
 fun PredictionProcessor.PredictionResult.copy(
     tiderLines: List<TiderLineInfo>
 ): PredictionProcessor.PredictionResult {

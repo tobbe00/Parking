@@ -8,18 +8,7 @@ import com.example.parking.data.utils.isTimeRange
 
 object PredictionProcessor {
 
-    /**
-     * Returnerar en karta: "MatchedPredictions" -> List<PredictionResult>.
-     *
-     * Varje PredictionResult innehåller:
-     * - tagName
-     * - probability
-     * - description (från getCustomDescription i TagNameMapper)
-     * - boundingBox
-     * - matchedOcrLines
-     * - tiderLines (alla OCR-rader som är tidsintervall)
-     * - text (alla OCR-rader som inte är tid, hopslagna till en sträng)
-     */
+
     fun processPredictions(
         predictions: List<Prediction>,
         ocrLines: List<OcrLine>,
@@ -35,7 +24,7 @@ object PredictionProcessor {
             Log.d("PredictionProcessor", "Tag: ${it.tagName}, Probability: ${it.probability}")
         }
 
-        // 1) Normalisera OCR-linjerna
+
         val normalizedOcrLines = ocrLines.map { line ->
             val normBox = line.pixelBox.mapIndexed { i, value ->
                 if (i % 2 == 0) value / imageWidth else value / imageHeight
@@ -43,10 +32,10 @@ object PredictionProcessor {
             line.copy(normalizedBox = normBox)
         }
 
-        // 2) Filtrera predictions med sannolikhet >= 0.8 (justera tröskel själv)
+
         val highConfidencePredictions = predictions.filter { it.probability >= 0.8 }
 
-        // 3) Håll endast den högst sannolika predictionen per tagg
+
         val uniquePredictions = highConfidencePredictions
             .groupBy { it.tagName }
             .mapValues { (_, predictions) ->
@@ -54,9 +43,9 @@ object PredictionProcessor {
             }
             .values
 
-        // 4) Matcha varje unik prediction med OCR-linjer
+
         val matchedPredictions = uniquePredictions.map { prediction ->
-            // Hitta OCR-linjer vars bounding box överlappar
+
             val matchedLines = normalizedOcrLines.filter { ocrLine ->
                 val ocrBox = ocrLine.normalizedBox
                 val cvBox = prediction.boundingBox
@@ -66,11 +55,10 @@ object PredictionProcessor {
                         (cvBox.top + cvBox.height) >= ocrBox[1]
             }
 
-            // Dela upp i "tidsintervall" vs. "övriga rader"
             val timeLines = matchedLines.filter { isTimeRange(it.text) }
             val otherLines = matchedLines.filter { !isTimeRange(it.text) }
 
-            // Bygg TiderLineInfo av tidsrader
+
             val tiderLineInfos = timeLines.map { line ->
                 TiderLineInfo(
                     text = line.text,
@@ -78,10 +66,8 @@ object PredictionProcessor {
                 )
             }
 
-            // Övriga rader slår vi ihop till en sträng
             val matchingText = otherLines.joinToString(", ") { it.text }
 
-            // Bygg ut PredictionResult
             PredictionResult(
                 tagName = prediction.tagName,
                 text = matchingText,
@@ -97,7 +83,6 @@ object PredictionProcessor {
     }
 
 
-    // Data class för “slutresultatet”
     data class PredictionResult(
         val tagName: String,
         val text: String,

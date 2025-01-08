@@ -26,7 +26,6 @@ fun CameraPermissionRequest(
     val context = LocalContext.current
     var hasPermission by remember { mutableStateOf(false) }
 
-    // Launcher för att begära kamerabehörighet
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
@@ -34,7 +33,6 @@ fun CameraPermissionRequest(
         }
     )
 
-    // Kontrollera om behörighet redan är beviljad
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             hasPermission = true
@@ -42,10 +40,8 @@ fun CameraPermissionRequest(
     }
 
     if (hasPermission) {
-        // Kör när behörighet är beviljad
         onPermissionGranted()
     } else {
-        // Visa fallback-logik när behörighet saknas
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center

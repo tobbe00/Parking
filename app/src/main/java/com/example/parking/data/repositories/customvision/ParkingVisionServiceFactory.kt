@@ -10,8 +10,7 @@ object ParkingVisionServiceFactory {
     private const val BASE_URL = "https://parkingvision-prediction.cognitiveservices.azure.com/"
 
     fun create(): ParkingVisionService {
-        // Om du vill lägga Prediction-Key dynamiskt i en interceptor i stället
-        // kan du göra det här. Men vi har redan hårdkodat i @Headers just nu.
+
         val client = OkHttpClient.Builder().build()
 
         return Retrofit.Builder()

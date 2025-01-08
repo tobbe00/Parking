@@ -32,7 +32,7 @@ fun PreviewScreen(
     Log.d("PreviewScreen", "UI State: $uiState")
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Visa bilden
+
         Image(
             painter = rememberAsyncImagePainter(imageUri),
             contentDescription = "Captured Image",
@@ -42,7 +42,7 @@ fun PreviewScreen(
             contentScale = ContentScale.Crop
         )
 
-        // Knapparna för att ta om bilden eller skicka den till Vision API
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -64,7 +64,6 @@ fun PreviewScreen(
             }
         }
 
-        // Visa eventuella felmeddelanden
         uiState.errorMessage?.let { error ->
             Log.e("PreviewScreen", "Felmeddelande: $error")
             Text(
@@ -74,7 +73,6 @@ fun PreviewScreen(
             )
         }
 
-        // Om det finns resultat, skicka dem vidare
         if (uiState.result.isNotEmpty()) {
             Log.d("PreviewScreen", "Resultat hittat: ${uiState.result}")
             onSendComplete(uiState.result)

@@ -24,11 +24,10 @@ fun ResultScreen(
     results: Map<String, Any>,
     onBack: () -> Unit
 ) {
-    // Hämta ALLA predictions
+
     val matchedPredictions = results["MatchedPredictions"] as? List<PredictionProcessor.PredictionResult>
         ?: emptyList()
 
-    // Sätt vilka taggar som ska visas i huvudlistan
     val mainListTagNames = setOf(
         "FörbudStop",
         "FörbudParkera",
@@ -71,7 +70,7 @@ fun ResultScreen(
         Text("Resultat:", fontSize = 20.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Visa alla skyltar i huvudsidan
+
         mainListPredictions.forEach { prediction ->
             Card(
                 modifier = Modifier
@@ -83,17 +82,17 @@ fun ResultScreen(
                         "FörbudJämnUdda",
                         "FörbudJämn",
                         "FörbudUdda" -> {
-                            // Visa rubrik
+
                             Text(
                                 text = mapTagNameToDisplayName(prediction.tagName),
                                 fontSize = 18.sp
                             )
-                            // Lägg till custom description
+
                             Text(
                                 text = prediction.description,
                                 fontSize = 16.sp
                             )
-                            // Hantera tider om de finns
+
                             if (prediction.tiderLines.isNotEmpty()) {
                                 val combinedTiderLines = combineDayPrefixWithNextTimeRange(prediction.tiderLines)
                                 combinedTiderLines.forEach { lineInfo ->
@@ -108,7 +107,7 @@ fun ResultScreen(
                         "Tider",
                         "FörbudStop",
                         "FörbudParkera" -> {
-                            // Visa rubrik och text/tider för Tider och Förbud
+
                             Text(
                                 text = mapTagNameToDisplayName(prediction.tagName),
                                 fontSize = 18.sp
@@ -138,7 +137,7 @@ fun ResultScreen(
                             }
                         }
                         "P-skiva" -> {
-                            // Visa beskrivning och extrahera timmar för P-skiva
+
                             Text(
                                 text = prediction.description,
                                 fontSize = 16.sp
@@ -151,7 +150,7 @@ fun ResultScreen(
                             }
                         }
                         else -> {
-                            // Visa endast beskrivning för andra skyltar
+
                             Text(
                                 text = prediction.description,
                                 fontSize = 16.sp
@@ -164,7 +163,6 @@ fun ResultScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Tillbaka-knapp
         Button(onClick = onBack) {
             Text("Tillbaka")
         }

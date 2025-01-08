@@ -14,21 +14,20 @@ object AzureReadRepository {
 
     suspend fun getOcrLines(imageUrl: String): Pair<List<OcrLine>, Pair<Int, Int>> = withContext(Dispatchers.IO) {
         try {
-            // Skicka in bilden (URL) till "read/analyze"
+
             val postResp: Response<Void> = service.postImageUrl(mapOf("url" to imageUrl)).execute()
             if (!postResp.isSuccessful) {
                 Log.e("AzureReadRepository", "POST-fel: ${postResp.code()} - ${postResp.errorBody()?.string()}")
                 return@withContext Pair(emptyList(), Pair(0, 0))
             }
 
-            // Få ut Operation-Location från header
+
             val operationLocation = postResp.headers()["Operation-Location"]
             if (operationLocation.isNullOrBlank()) {
                 Log.e("AzureReadRepository", "Saknar Operation-Location")
                 return@withContext Pair(emptyList(), Pair(0, 0))
             }
 
-            // Polla GET tills status=succeeded
             var readResult: ReadOperationResult? = null
             for (i in 1..10) {
                 delay(1000L)
@@ -47,7 +46,6 @@ object AzureReadRepository {
                 }
             }
 
-            // Extrahera OCR-data
             val ocrLines = mutableListOf<OcrLine>()
             var width = 0
             var height = 0
@@ -56,7 +54,7 @@ object AzureReadRepository {
                 width = page.width
                 height = page.height
                 page.lines?.forEach { line ->
-                    // Här sparar vi pixelBox som "pixelBox"
+                    // här sparar vi pixelBox som "pixelBox"
                     ocrLines.add(
                         OcrLine(
                             text = line.text,

@@ -10,10 +10,6 @@ object ParkingVisionRepository {
 
     private val service = ParkingVisionServiceFactory.create()
 
-    /**
-     * Anropa Custom Vision detect/iterations/.../url med en bild-URL
-     * Returnerar en CustomVisionResponse som innehåller "predictions" (tagName, boundingBox m.m.)
-     */
     suspend fun detectFromImageUrl(imageUrl: String): CustomVisionResponse? = withContext(Dispatchers.IO) {
         try {
             val resp = service.detectFromUrl(mapOf("Url" to imageUrl)).execute()

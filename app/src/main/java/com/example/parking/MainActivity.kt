@@ -25,10 +25,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Lock orientation to portrait
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
-        // Test if Azure Vision API works correctly (optional, for debugging)
         runBlocking {
             testAzureVisionApi(applicationContext)
         }
@@ -41,7 +39,6 @@ class MainActivity : ComponentActivity() {
 suspend fun testAzureVisionApi(context: Context) {
     withContext(Dispatchers.IO) {
         try {
-            // Testa att använda Azure Vision API (valfritt)
             Log.d("AzureVisionTest", "Azure Vision API konfigurerat korrekt!")
         } catch (e: Exception) {
             Log.e("AzureVisionTest", "Fel vid testning av Azure Vision API", e)
@@ -97,8 +94,8 @@ fun ParkingApp(viewModel: ParkingViewModel = viewModel()) {
             ResultScreen(
                 results = viewModel.uiState.result,
                 onBack = {
-                    imageUri = null // Clear the previous image URI
-                    viewModel.clearResults() // Clear ViewModel state
+                    imageUri = null
+                    viewModel.clearResults()
                     currentScreen = "HomeScreen"
                 }
             )

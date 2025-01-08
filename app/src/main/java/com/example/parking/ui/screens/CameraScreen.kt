@@ -68,7 +68,7 @@ fun CameraScreen(onImageCaptured: (Uri) -> Unit) {
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                         val savedUri = Uri.fromFile(photoFile)
                         Log.d("CameraScreen", "Photo captured: $savedUri")
-                        onImageCaptured(savedUri) // Pass the latest image URI.
+                        onImageCaptured(savedUri)
                     }
 
                     override fun onError(exception: ImageCaptureException) {

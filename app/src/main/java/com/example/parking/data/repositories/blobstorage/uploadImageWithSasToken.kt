@@ -21,7 +21,7 @@ suspend fun uploadImageWithSasToken(
         Log.d("BlobUpload", "=== Startar uppladdning med SAS-token ===")
         Log.d("BlobUpload", "URI: $uri")
 
-        // Läs bilden från URI och spara som en temporär fil
+
         val inputStream = context.contentResolver.openInputStream(uri)
             ?: throw IllegalArgumentException("Kunde inte läsa bilden från URI: $uri")
         val tempFile = File(context.cacheDir, "temp_image.jpg")
@@ -30,23 +30,21 @@ suspend fun uploadImageWithSasToken(
         }
         Log.d("BlobUpload", "Bilden sparad till temporär fil: ${tempFile.absolutePath} (Storlek: ${tempFile.length()} bytes)")
 
-        // Komprimera bilden
+
         val compressedFile = compressImage(tempFile.absolutePath, context)
         Log.d(
             "BlobUpload",
             "Komprimerad bild sparad: ${compressedFile.absolutePath} (Storlek: ${compressedFile.length()} bytes)"
         )
-        // Generera blob-namn (filnamn för bilden)
+
         val blobName = "${System.currentTimeMillis()}.jpg"
 
-        // Skapa korrekt URL genom att sätta in blobName i sökvägen före SAS-parametrarna
         val baseUrl = sasUrl.substringBefore("?")
         val sasToken = sasUrl.substringAfter("?")
         val uploadUrl = "$baseUrl/$blobName?$sasToken"
 
         Log.d("BlobUpload", "Uppladdnings-URL: $uploadUrl")
 
-        // Skicka PUT-förfrågan
         val client = OkHttpClient()
         val request = Request.Builder()
             .url(uploadUrl)
